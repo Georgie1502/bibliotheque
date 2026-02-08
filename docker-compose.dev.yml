@@ -1,0 +1,39 @@
+version: "3.8"
+
+services:
+  api:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: bibliotheque-api-dev
+    volumes:
+      - ./server:/app
+    ports:
+      - "8000:8000"
+    environment:
+      - ENV=development
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+    networks:
+      - bibliotheque-dev
+
+  client:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    container_name: bibliotheque-client-dev
+    volumes:
+      - ./client:/app
+      - /app/node_modules
+    ports:
+      - "3000:3000"
+    environment:
+      - REACT_APP_API_URL=http://localhost:8000
+      - WATCHPACK_POLLING=true
+    depends_on:
+      - api
+    networks:
+      - bibliotheque-dev
+
+networks:
+  bibliotheque-dev:
+    driver: bridge
