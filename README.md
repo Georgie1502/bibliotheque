@@ -9,6 +9,26 @@ Jorgelina LEDESMA
 
 Here you'll find a complete table of content with everything that has been established for better project management and newcome developers to understand the project structure and how to set up the development environment. Everything is ordered in a chronological way to make it easier to follow, following an actual newcome developer would do when joining the project.
 
+### Table of Contents
+
+- [Overview](#overview)
+- [Glossary](#glossary)
+- [Schemas](#schemas)
+- [Projects READMEs](#projects-readmes)
+- [Change Log](#change-log)
+- [Ansible Setup Instructions](#ansible-setup-instructions)
+- [Compose files](#compose-files)
+- [Guidelines](#guidelines)
+- [IA management](#ia-management)
+- [Kanban Board](#kanban-board)
+- [GitHub](#github)
+  - [Branching Strategy](#branching-strategy)
+  - [Commit Message Conventions](#commit-message-conventions)
+- [Automated Tests](#automated-tests)
+- [Security and Contributing](#security-and-contributing)
+- [CI/CD](#cicd)
+- [License](#license)
+
 > This document is written in english for wider accessibility. Anybody is welcome to contribute with translations in other languages.
 
 Everything here is made included in order to facilitate the onboarding of new developers, and to provide a clear structure for the project. It is also designed to be a living document that will be updated as the project evolves.
