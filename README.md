@@ -33,6 +33,10 @@ Here you'll find a complete table of content with everything that has been estab
 
 Everything here is made included in order to facilitate the onboarding of new developers, and to provide a clear structure for the project. It is also designed to be a living document that will be updated as the project evolves.
 
+---
+
+A more readable doc is automatically generated from this file and can be found in the `docs` directory. This is done to make it easier for new developers to understand the project structure and how to set up the development environment.
+
 ## Overview
 
 Here you can find a general overview of the project, its goals, and the technologies used.
