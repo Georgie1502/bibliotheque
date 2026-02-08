@@ -1,0 +1,105 @@
+name: Sync Markdown to Wiki
+
+on:
+  push:
+    branches:
+      - main
+      - master
+    paths:
+      - '**.md'
+      - '.github/workflows/wiki-sync.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  sync-wiki:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Checkout wiki
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ github.repository }}.wiki
+          path: wiki-content
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create Home page from README
+        run: |
+          cp README.md wiki-content/Home.md
+
+      - name: Copy markdown files to wiki
+        run: |
+          # Copy all markdown files preserving directory structure
+          mkdir -p wiki-content/docs
+          
+          # Copy root-level markdown files
+          for file in *.md; do
+            if [ "$file" != "README.md" ]; then
+              cp "$file" "wiki-content/${file%.md}.md"
+            fi
+          done
+          
+          # Copy nested markdown files, preserving structure
+          find . -path ./wiki-content -prune -o -name "*.md" -type f -print | while read file; do
+            relative_path="${file#./}"
+            if [[ "$relative_path" != "wiki-content"* ]]; then
+              target="wiki-content/docs/${relative_path}"
+              mkdir -p "$(dirname "$target")"
+              cp "$file" "$target"
+            fi
+          done
+          
+          # Create sidebar with directory structure
+          python3 << 'EOF'
+          import os
+          import json
+          
+          # Generate _Sidebar.md with navigation
+          sidebar_content = """# Documentation
+
+## Core
+- [[Home]]
+- [[README]]
+- [[CHANGELOG]]
+- [[CONTRIBUTING]]
+- [[GUIDELINES]]
+- [[SECURITY]]
+
+## Documentation
+- [[Database Schema|docs/SCHEMAS/DATABASE]]
+- [[Development Guide|docs/server/DEVELOPMENT]]
+- [[Testing|docs/server/TESTING]]
+- [[Setup|setup-dev-environment]]
+
+## Infrastructure
+- [[Ansible Setup|ANSIBLE_SETUP]]
+- [[Authors|AUTHORS]]
+"""
+          
+          with open('wiki-content/_Sidebar.md', 'w') as f:
+              f.write(sidebar_content)
+          
+          print("✓ Sidebar generated")
+          EOF
+
+      - name: Configure git
+        run: |
+          cd wiki-content
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+
+      - name: Commit and push changes
+        run: |
+          cd wiki-content
+          git add -A
+          
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "docs: sync markdown files from repo [skip ci]" || true
+            git push
+          fi
