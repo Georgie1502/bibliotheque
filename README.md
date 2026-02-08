@@ -117,6 +117,9 @@ A `[SECURITY.md](./SECURITY.md)` file is included to provide guidelines on how t
 
 A CI/CD pipeline is set up using GitHub Actions to automate the testing and deployment process. The configuration for the pipeline can be found in the `.github/workflows` directory. This pipeline will run tests on every pull request and automatically deploy to production when changes are merged into the `main` branch. Like this, no need to worry about manual deployments or missing tests.
 
+- Server autobuild and test: `.github/workflows/docker-publish-server.yml`
+- AutoDocs generation: `.github/workflows/wiki-sync.yml`
+
 ## License
 
 A license file (`LICENSE`) is included in the repository to specify the terms under which the code can be used, modified, and distributed. This is important for open-source projects to clarify the legal aspects of using the code.

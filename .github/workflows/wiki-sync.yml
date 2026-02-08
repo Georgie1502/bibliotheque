@@ -6,8 +6,8 @@ on:
       - main
       - master
     paths:
-      - '**.md'
-      - '.github/workflows/wiki-sync.yml'
+      - "**.md"
+      - ".github/workflows/wiki-sync.yml"
   workflow_dispatch:
 
 permissions:
@@ -35,14 +35,14 @@ jobs:
         run: |
           # Copy all markdown files preserving directory structure
           mkdir -p wiki-content/docs
-          
+
           # Copy root-level markdown files
           for file in *.md; do
             if [ "$file" != "README.md" ]; then
               cp "$file" "wiki-content/${file%.md}.md"
             fi
           done
-          
+
           # Copy nested markdown files, preserving structure
           find . -path ./wiki-content -prune -o -name "*.md" -type f -print | while read file; do
             relative_path="${file#./}"
@@ -52,39 +52,31 @@ jobs:
               cp "$file" "$target"
             fi
           done
-          
-          # Create sidebar with directory structure
-          python3 << 'EOF'
-          import os
-          import json
-          
-          # Generate _Sidebar.md with navigation
-          sidebar_content = """# Documentation
 
-## Core
-- [[Home]]
-- [[README]]
-- [[CHANGELOG]]
-- [[CONTRIBUTING]]
-- [[GUIDELINES]]
-- [[SECURITY]]
+      - name: Create wiki sidebar
+        run: |
+          cat > wiki-content/_Sidebar.md << 'EOF'
+          # Documentation
 
-## Documentation
-- [[Database Schema|docs/SCHEMAS/DATABASE]]
-- [[Development Guide|docs/server/DEVELOPMENT]]
-- [[Testing|docs/server/TESTING]]
-- [[Setup|setup-dev-environment]]
+          ## Core
+          - [[Home]]
+          - [[README]]
+          - [[CHANGELOG]]
+          - [[CONTRIBUTING]]
+          - [[GUIDELINES]]
+          - [[SECURITY]]
 
-## Infrastructure
-- [[Ansible Setup|ANSIBLE_SETUP]]
-- [[Authors|AUTHORS]]
-"""
-          
-          with open('wiki-content/_Sidebar.md', 'w') as f:
-              f.write(sidebar_content)
-          
-          print("✓ Sidebar generated")
+          ## Documentation
+          - [[Database Schema|docs/SCHEMAS/DATABASE]]
+          - [[Development Guide|docs/server/DEVELOPMENT]]
+          - [[Testing|docs/server/TESTING]]
+          - [[Setup|setup-dev-environment]]
+
+          ## Infrastructure
+          - [[Ansible Setup|ANSIBLE_SETUP]]
+          - [[Authors|AUTHORS]]
           EOF
+          echo "✓ Sidebar created"
 
       - name: Configure git
         run: |
@@ -96,7 +88,7 @@ jobs:
         run: |
           cd wiki-content
           git add -A
-          
+
           if git diff --cached --quiet; then
             echo "No changes to commit"
           else

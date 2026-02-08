@@ -6,6 +6,9 @@ on:
       - main
     tags:
       - "v*"
+    paths:
+      - "server/**"
+      - ".github/workflows/docker-publish.yml"
   pull_request:
     branches:
       - main
