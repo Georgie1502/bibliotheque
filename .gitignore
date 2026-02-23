@@ -1,0 +1,36 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.egg-info/
+.eggs/
+.python-version
+.venv/
+venv/
+.env
+
+# FastAPI / SQLite
+server/bibliotheque.db
+
+# Tests / tooling
+.pytest_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+
+# Node / Vite
+client/node_modules/
+client/dist/
+client/.vite/
+client/.env
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS / editors
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
