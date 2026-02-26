@@ -72,6 +72,21 @@ client/
 - `npm run build`  : production build
 - `npm run preview`: preview the production build locally
 
+## Ladle Stories
+
+- Launch: `npm run ladle` (opens on http://localhost:61000 by default); stop with Ctrl+C in the terminal.
+- Build/preview: `npm run ladle:build` produces static stories, `npm run ladle:preview` serves the build; use for CI artifacts or sharing static snapshots.
+- Locations: stories live in `src/stories` and mirror core components (AuthForm, AuthorForm, AuthorList, BookDetail, BookForm, BookList). Shared styles/providers are applied via [.ladle/components.tsx](.ladle/components.tsx) which wraps stories with the app background and imports `src/index.css`.
+- Backend-free runs: existing stories stub data and callbacks (console logging, simulated latency) so they work without the API. To exercise real calls, wire the callbacks to `api/client` helpers and set `VITE_API_BASE_URL` to your backend.
+- Existing scenarios:
+	- AuthForm: Default; CustomCallback (custom token handling)
+	- AuthorForm: Default; ErrorState (throws on submit)
+	- AuthorList: Default; Empty
+	- BookDetail: SelectedBook (update/delete hooks); NoSelection
+	- BookForm: Default; NoAuthors
+	- BookList: Default (filter/select state); EmptyState
+- Troubleshooting: if port 61000 is busy, run `npm run ladle -- --port 61001`; for HMR glitches, restart the Ladle process; if styles vanish, ensure `.ladle/components.tsx` still imports `src/index.css`; stale UI issues often clear by hard-refreshing the browser cache. Open issues/PRs for new story requests or add a new file under `src/stories` following the existing patterns.
+
 ## Styling
 
 - Tailwind is enabled; globals in `src/index.css` set base colors and font (Space Grotesk).
