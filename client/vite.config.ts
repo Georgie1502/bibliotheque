@@ -6,5 +6,15 @@ export default defineConfig({
   server: {
     port: 5173,
     open: true
+  },
+  test: {
+    environment: "jsdom",
+    setupFiles: "./src/test/setup.ts",
+    css: true,
+    exclude: ["e2e/**", "node_modules", "dist"],
+    coverage: {
+      provider: "v8",
+      reporter: ["text", "html", "lcov"]
+    }
   }
 });
