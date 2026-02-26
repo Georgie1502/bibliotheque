@@ -358,6 +358,30 @@ This document outlines the key user personas for the Bibliotheque online library
 
 ---
 
+## 9. **David - The Geek**
+
+### Profile
+
+- **Age**: 12
+- **Role**: The Geek
+- **Tech Proficiency**: Very High
+- **Background**: Roblox
+
+He likes gaming and would like achievements in the website
+
+---
+
+## 10. **Bernadette - The old cathodic lady**
+
+### Profile
+
+- **Age**: 80
+- **Role**: The old cathodic lady
+- **Tech Proficiency**: Low
+- **Background**: She is a retired librarian who loves books but struggles with technology. She wants to use the online library to find books for her grandchildren but finds the interface confusing and overwhelming.
+
+She wants to use the website on her older screens
+
 ## Persona Interaction Map
 
 ```
