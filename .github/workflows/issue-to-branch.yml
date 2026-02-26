@@ -1,0 +1,72 @@
+name: Create Branch from Issue
+
+on:
+  issues:
+    types: [opened]
+
+jobs:
+  create-branch:
+    runs-on: ubuntu-latest
+    if: github.event.action == 'opened'
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Extract issue details
+        id: issue
+        run: |
+          ISSUE_TITLE="${{ github.event.issue.title }}"
+
+          # Extract the issue ID from the title (e.g., ONLIB-3002 from "ONLIB-3002 Create Client Auto Docker Deploy")
+          ISSUE_ID=$(echo "${ISSUE_TITLE}" | grep -oE '^[A-Z]+-[0-9]+' || true)
+
+          if [ -z "$ISSUE_ID" ]; then
+            echo "error=true" >> $GITHUB_OUTPUT
+            echo "message=Issue title must start with issue ID format (e.g., ONLIB-3002 Create...)" >> $GITHUB_OUTPUT
+          else
+            BRANCH_NAME="feat/${ISSUE_ID}"
+            echo "branch_name=${BRANCH_NAME}" >> $GITHUB_OUTPUT
+            echo "issue_id=${ISSUE_ID}" >> $GITHUB_OUTPUT
+            echo "error=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create branch from main
+        if: steps.issue.outputs.error == 'false'
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+
+          # Ensure we're on main
+          git checkout main
+          git pull origin main
+
+          # Create new branch
+          git checkout -b ${{ steps.issue.outputs.branch_name }}
+          git push origin ${{ steps.issue.outputs.branch_name }}
+
+      - name: Comment on issue - Success
+        if: steps.issue.outputs.error == 'false'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `✅ Branch created: \`${{ steps.issue.outputs.branch_name }}\`\n\nYou can now start working on this issue using the feature branch.`
+            })
+
+      - name: Comment on issue - Error
+        if: steps.issue.outputs.error == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `❌ Failed to create branch: ${{ steps.issue.outputs.message }}\n\nPlease update the issue title to follow the format: \`ONLIB-#### Description\``
+            })

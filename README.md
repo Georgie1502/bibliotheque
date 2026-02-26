@@ -12,6 +12,7 @@ Here you'll find a complete table of content with everything that has been estab
 ### Table of Contents
 
 - [Overview](#overview)
+  - [Automatic Branch Creation from Issues](#automatic-branch-creation-from-issues)
 - [Glossary](#glossary)
 - [Schemas](#schemas)
 - [Projects READMEs](#projects-readmes)
@@ -44,6 +45,32 @@ Here you can find a general overview of the project, its goals, and the technolo
 > Why using Python and React ?
 
 Python and react are two of the most popular programming languages in the world, and they are both widely used for web development. Python is a great choice for the backend because it is easy to learn, has a large community, and has many powerful libraries for web development. React is a great choice for the frontend because it is fast, efficient, and has a large ecosystem of tools and libraries.
+
+### Automatic Branch Creation from Issues
+
+When you create a new issue on GitHub, an automatic workflow (`issue-to-branch`) will create a corresponding feature branch. **Issue titles must follow the naming convention:**
+
+**Naming Convention:**
+
+```
+ONLIB-#### Description of the work
+```
+
+**Example:**
+
+- Issue title: `ONLIB-3002 Create Client Auto Docker Deploy`
+- Created branch: `feat/ONLIB-3002`
+
+**How to trigger it:**
+
+1. Create a new issue on GitHub with a title following the format `PROJECT-NUMBER Description`
+2. The workflow will automatically:
+   - Extract the issue ID (e.g., ONLIB-3002)
+   - Create a new branch named `feat/{ISSUE-ID}`
+   - Push it to the repository
+   - Post a comment on the issue with the branch name or error message
+
+This ensures consistent naming across your codebase and makes it easy to track which branch corresponds to which issue.
 
 ## Glossary
 
@@ -89,7 +116,7 @@ Based on the Kanban issues naming convention, we will adopt a branching strategy
 
 - `main`: This branch will always contain the stable, production-ready code. All completed features and bug fixes will be merged into this branch after thorough testing.
 - x.x.x: These branches includes specific versions of the project, for example `1.0.0`, `1.1.0`, etc. They will be used to manage releases and hotfixes for specific versions, following semantic versioning principles.
-- `feature/issue-number`: These branches will be created for each new feature or bug fix, following the naming convention of the corresponding issue (e.g., `feature/12345-add-user-authentication`). Once the work on the feature is complete and has passed code review and testing, it will be merged into the version branch, then the `main` branch.
+- `feat/ONLIB-####`: These branches will be created automatically for each new feature or bug fix, where `ONLIB-####` corresponds to the issue ID (e.g., `feat/ONLIB-3002`). The branch is created automatically when you open a GitHub issue with the correct naming convention. Once the work on the feature is complete and has passed code review and testing, it will be merged into the version branch, then the `main` branch.
 
 ### Commit Message Conventions
 
