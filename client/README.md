@@ -69,6 +69,16 @@ client/
 - `npm run dev`    : Start dev server with HMR
 - `npm run build`  : Type-check then build for production
 - `npm run preview`: Serve the built app locally
+- `npm run ladle`  : Run Ladle UI explorer for components (stories)
+- `npm run ladle:build`   : Build static Ladle bundle
+- `npm run ladle:preview` : Preview the built Ladle bundle
+
+## Component Stories (Ladle)
+
+- Stories live in `src/stories` and mirror the main UI components.
+- Start Ladle locally: `npm run ladle` (opens at http://localhost:61000 by default).
+- Use the stories to explore props and edge cases without running the backend.
+- Global styles are provided via `.ladle/components.tsx` so stories match the app look.
 
 ## Environment Variables
 
