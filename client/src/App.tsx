@@ -9,7 +9,7 @@ import {
   upsertPreferences,
   createAuthor,
   setAuthToken,
-  updateBook
+  updateBook,
 } from "./api/client";
 import AuthForm from "./components/AuthForm";
 import AuthorForm from "./components/AuthorForm";
@@ -19,6 +19,16 @@ import BookList from "./components/BookList";
 import PreferencesPanel from "./components/PreferencesPanel";
 import { usePreferences } from "./hooks/usePreferences";
 import { Author, Book, BookPayload, BookUpdatePayload, User, AuthorPayload } from "./types";
+import { Confetti } from "./components/Confetti";
+import { useKonamiCode } from "./hooks/useKonamiCode";
+import {
+  Author,
+  Book,
+  BookPayload,
+  BookUpdatePayload,
+  User,
+  AuthorPayload,
+} from "./types";
 
 const STORAGE_KEY = "bibliotheque_token";
 
@@ -32,6 +42,12 @@ const App = () => {
   const [filter, setFilter] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [konamiTriggerCount, setKonamiTriggerCount] = useState(0);
+
+  // Konami code easter egg
+  useKonamiCode(() => {
+    setKonamiTriggerCount((prev) => prev + 1);
+  });
 
   // Sync when token changes (including first load from localStorage)
   useEffect(() => {
@@ -56,7 +72,7 @@ const App = () => {
       const [me, fetchedAuthors, fetchedBooks] = await Promise.all([
         fetchCurrentUser(),
         fetchAuthors(),
-        fetchBooks()
+        fetchBooks(),
       ]);
       setUser(me);
       setAuthors(fetchedAuthors);
@@ -72,7 +88,9 @@ const App = () => {
         // Keep localStorage prefs if the API call fails
       }
     } catch (err: unknown) {
-      setError("Impossible de récupérer les données. Vérifie le token ou que l'API tourne (localhost:8000).");
+      setError(
+        "Impossible de récupérer les données. Vérifie le token ou que l'API tourne (localhost:8000).",
+      );
     } finally {
       setLoading(false);
     }
@@ -130,7 +148,10 @@ const App = () => {
     setSelectedId(refreshed[0]?.id ?? null);
   };
 
-  const selectedBook = useMemo(() => books.find((b) => b.id === selectedId) || null, [books, selectedId]);
+  const selectedBook = useMemo(
+    () => books.find((b) => b.id === selectedId) || null,
+    [books, selectedId],
+  );
 
   if (!token || !user) {
     return (
@@ -145,6 +166,11 @@ const App = () => {
       <div className="max-w-6xl mx-auto space-y-4 sm:space-y-6">
         <header className="flex flex-wrap items-center justify-between gap-2 bg-white/5 border border-white/10 rounded-2xl p-3 sm:p-4 shadow-soft">
           <div className="min-w-0">
+    <div className="min-h-screen text-white p-6">
+      <Confetti trigger={konamiTriggerCount} />
+      <div className="max-w-6xl mx-auto space-y-6">
+        <header className="flex items-center justify-between bg-white/5 border border-white/10 rounded-2xl p-4 shadow-soft">
+          <div>
             <p className="text-xs text-sand/60">Connecté</p>
             <h1 className="text-xl sm:text-2xl font-semibold truncate">Bonjour {user.email}</h1>
           </div>
@@ -199,7 +225,9 @@ const App = () => {
         </div>
 
         {loading && (
-          <div className="text-center text-sand/70 text-sm">Chargement des données...</div>
+          <div className="text-center text-sand/70 text-sm">
+            Chargement des données...
+          </div>
         )}
       </div>
     </div>
