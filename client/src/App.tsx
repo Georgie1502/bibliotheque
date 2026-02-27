@@ -7,19 +7,30 @@ import {
   fetchCurrentUser,
   createAuthor,
   setAuthToken,
-  updateBook
+  updateBook,
 } from "./api/client";
 import AuthForm from "./components/AuthForm";
 import AuthorForm from "./components/AuthorForm";
 import BookDetail from "./components/BookDetail";
 import BookForm from "./components/BookForm";
 import BookList from "./components/BookList";
-import { Author, Book, BookPayload, BookUpdatePayload, User, AuthorPayload } from "./types";
+import { Confetti } from "./components/Confetti";
+import { useKonamiCode } from "./hooks/useKonamiCode";
+import {
+  Author,
+  Book,
+  BookPayload,
+  BookUpdatePayload,
+  User,
+  AuthorPayload,
+} from "./types";
 
 const STORAGE_KEY = "bibliotheque_token";
 
 const App = () => {
-  const [token, setToken] = useState<string | null>(() => localStorage.getItem(STORAGE_KEY));
+  const [token, setToken] = useState<string | null>(() =>
+    localStorage.getItem(STORAGE_KEY),
+  );
   const [user, setUser] = useState<User | null>(null);
   const [books, setBooks] = useState<Book[]>([]);
   const [authors, setAuthors] = useState<Author[]>([]);
@@ -27,6 +38,12 @@ const App = () => {
   const [filter, setFilter] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [konamiTriggerCount, setKonamiTriggerCount] = useState(0);
+
+  // Konami code easter egg
+  useKonamiCode(() => {
+    setKonamiTriggerCount((prev) => prev + 1);
+  });
 
   // Sync when token changes (including first load from localStorage)
   useEffect(() => {
@@ -51,7 +68,7 @@ const App = () => {
       const [me, fetchedAuthors, fetchedBooks] = await Promise.all([
         fetchCurrentUser(),
         fetchAuthors(),
-        fetchBooks()
+        fetchBooks(),
       ]);
       setUser(me);
       setAuthors(fetchedAuthors);
@@ -60,7 +77,9 @@ const App = () => {
         setSelectedId(fetchedBooks[0].id);
       }
     } catch (err: unknown) {
-      setError("Impossible de récupérer les données. Vérifie le token ou que l'API tourne (localhost:8000).");
+      setError(
+        "Impossible de récupérer les données. Vérifie le token ou que l'API tourne (localhost:8000).",
+      );
     } finally {
       setLoading(false);
     }
@@ -106,7 +125,10 @@ const App = () => {
     setSelectedId(refreshed[0]?.id ?? null);
   };
 
-  const selectedBook = useMemo(() => books.find((b) => b.id === selectedId) || null, [books, selectedId]);
+  const selectedBook = useMemo(
+    () => books.find((b) => b.id === selectedId) || null,
+    [books, selectedId],
+  );
 
   if (!token || !user) {
     return (
@@ -118,6 +140,7 @@ const App = () => {
 
   return (
     <div className="min-h-screen text-white p-6">
+      <Confetti trigger={konamiTriggerCount} />
       <div className="max-w-6xl mx-auto space-y-6">
         <header className="flex items-center justify-between bg-white/5 border border-white/10 rounded-2xl p-4 shadow-soft">
           <div>
@@ -174,7 +197,9 @@ const App = () => {
         </div>
 
         {loading && (
-          <div className="text-center text-sand/70 text-sm">Chargement des données...</div>
+          <div className="text-center text-sand/70 text-sm">
+            Chargement des données...
+          </div>
         )}
       </div>
     </div>
