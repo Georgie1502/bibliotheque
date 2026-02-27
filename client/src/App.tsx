@@ -18,7 +18,6 @@ import BookForm from "./components/BookForm";
 import BookList from "./components/BookList";
 import PreferencesPanel from "./components/PreferencesPanel";
 import { usePreferences } from "./hooks/usePreferences";
-import { Author, Book, BookPayload, BookUpdatePayload, User, AuthorPayload } from "./types";
 import { Confetti } from "./components/Confetti";
 import { useKonamiCode } from "./hooks/useKonamiCode";
 import {
@@ -34,7 +33,9 @@ const STORAGE_KEY = "bibliotheque_token";
 
 const App = () => {
   const { prefs, update: _updatePrefs, load: loadPrefs } = usePreferences();
-  const [token, setToken] = useState<string | null>(() => localStorage.getItem(STORAGE_KEY));
+  const [token, setToken] = useState<string | null>(() =>
+    localStorage.getItem(STORAGE_KEY),
+  );
   const [user, setUser] = useState<User | null>(null);
   const [books, setBooks] = useState<Book[]>([]);
   const [authors, setAuthors] = useState<Author[]>([]);
@@ -83,7 +84,10 @@ const App = () => {
       // Hydrate display preferences from server (best-effort)
       try {
         const serverPrefs = await fetchPreferences();
-        loadPrefs({ theme: serverPrefs.theme, fontScale: serverPrefs.font_scale });
+        loadPrefs({
+          theme: serverPrefs.theme,
+          fontScale: serverPrefs.font_scale,
+        });
       } catch (_) {
         // Keep localStorage prefs if the API call fails
       }
@@ -101,7 +105,7 @@ const App = () => {
     try {
       await upsertPreferences({
         theme: partial.theme,
-        font_scale: partial.fontScale
+        font_scale: partial.fontScale,
       });
     } catch (_) {
       // Persist locally even if the API is unreachable
@@ -163,16 +167,14 @@ const App = () => {
 
   return (
     <div className="min-h-screen text-white p-3 sm:p-6">
-      <div className="max-w-6xl mx-auto space-y-4 sm:space-y-6">
-        <header className="flex flex-wrap items-center justify-between gap-2 bg-white/5 border border-white/10 rounded-2xl p-3 sm:p-4 shadow-soft">
-          <div className="min-w-0">
-    <div className="min-h-screen text-white p-6">
       <Confetti trigger={konamiTriggerCount} />
       <div className="max-w-6xl mx-auto space-y-6">
         <header className="flex items-center justify-between bg-white/5 border border-white/10 rounded-2xl p-4 shadow-soft">
           <div>
             <p className="text-xs text-sand/60">Connecté</p>
-            <h1 className="text-xl sm:text-2xl font-semibold truncate">Bonjour {user.email}</h1>
+            <h1 className="text-xl sm:text-2xl font-semibold truncate">
+              Bonjour {user.email}
+            </h1>
           </div>
           <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
             <PreferencesPanel prefs={prefs} onUpdate={updatePrefs} />
