@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.database import init_db
-from app.routes import users, books, authors
+from app.routes import users, books, authors, preferences
 
 # Initialize database
 init_db()
@@ -27,6 +27,7 @@ app.add_middleware(
 app.include_router(users.router)
 app.include_router(books.router)
 app.include_router(authors.router)
+app.include_router(preferences.router)
 
 
 @app.get("/")
