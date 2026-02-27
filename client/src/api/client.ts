@@ -6,6 +6,8 @@ import {
   BookPayload,
   BookUpdatePayload,
   AuthorPayload,
+  Preference,
+  PreferencePayload,
   User
 } from "../types";
 
@@ -68,6 +70,16 @@ export const updateBook = async (
 
 export const deleteBook = async (id: number): Promise<void> => {
   await api.delete(`/api/books/${id}`);
+};
+
+export const fetchPreferences = async (): Promise<Preference> => {
+  const { data } = await api.get<Preference>("/api/preferences/me");
+  return data;
+};
+
+export const upsertPreferences = async (payload: PreferencePayload): Promise<Preference> => {
+  const { data } = await api.put<Preference>("/api/preferences/me", payload);
+  return data;
 };
 
 export default api;

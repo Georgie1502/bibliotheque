@@ -7,6 +7,9 @@ const config: Config = {
   ],
   theme: {
     extend: {
+      screens: {
+        xs: "480px"
+      },
       fontFamily: {
         display: ["'Space Grotesk'", "sans-serif"],
         body: ["'Space Grotesk'", "sans-serif"]
@@ -14,7 +17,7 @@ const config: Config = {
       colors: {
         midnight: "#0f172a",
         sand: "#f1e9db",
-        teal: "#0ea5e9",
+        teal: "rgb(var(--color-accent) / <alpha-value>)",
         amber: "#f59e0b",
         ink: "#111827"
       },

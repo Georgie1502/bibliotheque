@@ -38,7 +38,7 @@ const BookList = ({ books, filter, onFilterChange, onSelect, selectedId }: BookL
         </div>
       </div>
 
-      <div className="space-y-3 overflow-y-auto max-h-[70vh] pr-1">
+      <div className="space-y-3 overflow-y-auto max-h-[40vh] md:max-h-[60vh] pr-1">
         {filtered.map((book) => {
           const isActive = selectedId === book.id;
           return (

@@ -44,3 +44,14 @@ export type AuthResponse = {
   token_type: string;
   user: User;
 };
+
+export type Preference = {
+  id: number;
+  user_id: number;
+  theme: "dark" | "sepia" | "ardoise" | "foret";
+  font_scale: "normal" | "large" | "xlarge";
+  created_at: string;
+  updated_at: string;
+};
+
+export type PreferencePayload = Partial<Pick<Preference, "theme" | "font_scale">>;

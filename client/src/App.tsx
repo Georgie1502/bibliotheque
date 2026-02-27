@@ -5,6 +5,8 @@ import {
   fetchAuthors,
   fetchBooks,
   fetchCurrentUser,
+  fetchPreferences,
+  upsertPreferences,
   createAuthor,
   setAuthToken,
   updateBook,
@@ -14,6 +16,9 @@ import AuthorForm from "./components/AuthorForm";
 import BookDetail from "./components/BookDetail";
 import BookForm from "./components/BookForm";
 import BookList from "./components/BookList";
+import PreferencesPanel from "./components/PreferencesPanel";
+import { usePreferences } from "./hooks/usePreferences";
+import { Author, Book, BookPayload, BookUpdatePayload, User, AuthorPayload } from "./types";
 import { Confetti } from "./components/Confetti";
 import { useKonamiCode } from "./hooks/useKonamiCode";
 import {
@@ -28,9 +33,8 @@ import {
 const STORAGE_KEY = "bibliotheque_token";
 
 const App = () => {
-  const [token, setToken] = useState<string | null>(() =>
-    localStorage.getItem(STORAGE_KEY),
-  );
+  const { prefs, update: _updatePrefs, load: loadPrefs } = usePreferences();
+  const [token, setToken] = useState<string | null>(() => localStorage.getItem(STORAGE_KEY));
   const [user, setUser] = useState<User | null>(null);
   const [books, setBooks] = useState<Book[]>([]);
   const [authors, setAuthors] = useState<Author[]>([]);
@@ -76,12 +80,31 @@ const App = () => {
       if (fetchedBooks.length && !selectedId) {
         setSelectedId(fetchedBooks[0].id);
       }
+      // Hydrate display preferences from server (best-effort)
+      try {
+        const serverPrefs = await fetchPreferences();
+        loadPrefs({ theme: serverPrefs.theme, fontScale: serverPrefs.font_scale });
+      } catch (_) {
+        // Keep localStorage prefs if the API call fails
+      }
     } catch (err: unknown) {
       setError(
         "Impossible de récupérer les données. Vérifie le token ou que l'API tourne (localhost:8000).",
       );
     } finally {
       setLoading(false);
+    }
+  };
+
+  const updatePrefs = async (partial: Parameters<typeof _updatePrefs>[0]) => {
+    _updatePrefs(partial);
+    try {
+      await upsertPreferences({
+        theme: partial.theme,
+        font_scale: partial.fontScale
+      });
+    } catch (_) {
+      // Persist locally even if the API is unreachable
     }
   };
 
@@ -132,22 +155,27 @@ const App = () => {
 
   if (!token || !user) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-6">
+      <div className="min-h-screen flex items-center justify-center p-4 sm:p-6">
         <AuthForm onAuthenticated={handleAuth} />
       </div>
     );
   }
 
   return (
+    <div className="min-h-screen text-white p-3 sm:p-6">
+      <div className="max-w-6xl mx-auto space-y-4 sm:space-y-6">
+        <header className="flex flex-wrap items-center justify-between gap-2 bg-white/5 border border-white/10 rounded-2xl p-3 sm:p-4 shadow-soft">
+          <div className="min-w-0">
     <div className="min-h-screen text-white p-6">
       <Confetti trigger={konamiTriggerCount} />
       <div className="max-w-6xl mx-auto space-y-6">
         <header className="flex items-center justify-between bg-white/5 border border-white/10 rounded-2xl p-4 shadow-soft">
           <div>
             <p className="text-xs text-sand/60">Connecté</p>
-            <h1 className="text-2xl font-semibold">Bonjour {user.email}</h1>
+            <h1 className="text-xl sm:text-2xl font-semibold truncate">Bonjour {user.email}</h1>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+            <PreferencesPanel prefs={prefs} onUpdate={updatePrefs} />
             <button
               onClick={bootstrap}
               className="text-sm px-3 py-1 rounded-lg border border-white/20 hover:border-white/40"
@@ -169,14 +197,14 @@ const App = () => {
           </div>
         )}
 
-        <div className="space-y-5">
-          <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-4 sm:space-y-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <BookForm authors={authors} onCreate={handleCreate} />
             <AuthorForm onCreate={handleAuthorCreate} />
           </div>
 
-          <div className="grid grid-cols-3 gap-6">
-            <div className="col-span-1">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
+            <div className="md:col-span-1">
               <BookList
                 books={books}
                 filter={filter}
@@ -185,7 +213,7 @@ const App = () => {
                 selectedId={selectedId}
               />
             </div>
-            <div className="col-span-2">
+            <div className="md:col-span-2">
               <BookDetail
                 book={selectedBook}
                 authors={authors}

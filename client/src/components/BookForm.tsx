@@ -60,7 +60,7 @@ const BookForm = ({ authors, onCreate }: BookFormProps) => {
         {loading && <span className="text-xs text-sand/70">Envoi...</span>}
       </div>
       <form onSubmit={submit} className="space-y-3">
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <label className="text-sm text-sand/80 col-span-2">
             Titre
             <input

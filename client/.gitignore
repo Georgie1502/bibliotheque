@@ -57,3 +57,7 @@ htmlcov/
 # Logs
 *.log
 logs/
+
+node_modules/
+.vite/
+dist/
