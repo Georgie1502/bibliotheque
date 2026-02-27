@@ -1,5 +1,5 @@
 from pydantic import BaseModel, EmailStr
-from typing import Optional, List
+from typing import Literal, Optional, List
 from datetime import datetime
 
 
@@ -89,3 +89,25 @@ class Token(BaseModel):
     access_token: str
     token_type: str = "bearer"
     user: UserRead
+
+
+# ==================== Preference Schemas ====================
+ThemeValue = Literal["dark", "sepia", "ardoise", "foret"]
+FontScaleValue = Literal["normal", "large", "xlarge"]
+
+
+class PreferenceRead(BaseModel):
+    id: int
+    user_id: int
+    theme: ThemeValue
+    font_scale: FontScaleValue
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class PreferenceUpdate(BaseModel):
+    theme: Optional[ThemeValue] = None
+    font_scale: Optional[FontScaleValue] = None

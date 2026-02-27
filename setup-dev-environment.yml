@@ -1,0 +1,231 @@
+---
+- name: Setup Development Environment for Bibliotheque
+  hosts: localhost
+  connection: local
+  gather_facts: yes
+  vars:
+    node_version: "18.x"
+    python_version: "3.11"
+
+  tasks:
+    - name: Update package manager (apt for Ubuntu/Debian)
+      apt:
+        update_cache: yes
+      when: ansible_os_family == "Debian"
+      become: yes
+
+    - name: Update package manager (brew for macOS)
+      homebrew:
+        update_homebrew: yes
+      when: ansible_os_family == "Darwin"
+
+    # ============ Docker Installation ============
+    - name: Install Docker (macOS via Homebrew)
+      homebrew:
+        name: docker
+        state: present
+      when: ansible_os_family == "Darwin"
+
+    - name: Install Docker (Ubuntu/Debian)
+      apt:
+        name: docker.io
+        state: present
+      become: yes
+      when: ansible_os_family == "Debian"
+
+    - name: Install Docker Compose (macOS)
+      homebrew:
+        name: docker-compose
+        state: present
+      when: ansible_os_family == "Darwin"
+
+    - name: Install Docker Compose (Ubuntu/Debian)
+      apt:
+        name: docker-compose
+        state: present
+      become: yes
+      when: ansible_os_family == "Debian"
+
+    - name: Start Docker daemon (Ubuntu/Debian)
+      systemd:
+        name: docker
+        state: started
+        enabled: yes
+      become: yes
+      when: ansible_os_family == "Debian"
+
+    - name: Add user to docker group (Ubuntu/Debian)
+      user:
+        name: "{{ ansible_user_id }}"
+        groups: docker
+        append: yes
+      become: yes
+      when: ansible_os_family == "Debian"
+
+    # ============ Python Installation ============
+    - name: Install Python 3 (macOS via Homebrew)
+      homebrew:
+        name: python@{{ python_version | regex_replace('\.\d+$', '') }}
+        state: present
+      when: ansible_os_family == "Darwin"
+
+    - name: Install Python 3 (Ubuntu/Debian)
+      apt:
+        name:
+          - python3
+          - python3-pip
+          - python3-venv
+        state: present
+      become: yes
+      when: ansible_os_family == "Debian"
+
+    - name: Upgrade pip (macOS)
+      shell: pip3 install --upgrade pip
+      when: ansible_os_family == "Darwin"
+
+    - name: Upgrade pip (Ubuntu/Debian)
+      shell: pip3 install --upgrade pip
+      become: yes
+      when: ansible_os_family == "Debian"
+
+    # ============ Node.js Installation ============
+    - name: Install Node.js (macOS via Homebrew)
+      homebrew:
+        name: node
+        state: present
+      when: ansible_os_family == "Darwin"
+
+    - name: Check if NVM is installed (Ubuntu/Debian)
+      stat:
+        path: ~/.nvm/nvm.sh
+      register: nvm_check
+      when: ansible_os_family == "Debian"
+
+    - name: Install NVM (Ubuntu/Debian)
+      shell: |
+        curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
+      when:
+        - ansible_os_family == "Debian"
+        - not nvm_check.stat.exists
+
+    - name: Install Node.js via NVM (Ubuntu/Debian)
+      shell: |
+        source ~/.nvm/nvm.sh
+        nvm install {{ node_version }}
+        nvm use {{ node_version }}
+        nvm alias default {{ node_version }}
+      args:
+        executable: /bin/bash
+      when: ansible_os_family == "Debian"
+
+    # ============ Git Installation ============
+    - name: Install Git (macOS)
+      homebrew:
+        name: git
+        state: present
+      when: ansible_os_family == "Darwin"
+
+    - name: Install Git (Ubuntu/Debian)
+      apt:
+        name: git
+        state: present
+      become: yes
+      when: ansible_os_family == "Debian"
+
+    # ============ Additional Tools ============
+    - name: Install curl (macOS)
+      homebrew:
+        name: curl
+        state: present
+      when: ansible_os_family == "Darwin"
+
+    - name: Install curl (Ubuntu/Debian)
+      apt:
+        name: curl
+        state: present
+      become: yes
+      when: ansible_os_family == "Debian"
+
+    - name: Install sqlite3 (macOS)
+      homebrew:
+        name: sqlite
+        state: present
+      when: ansible_os_family == "Darwin"
+
+    - name: Install sqlite3 (Ubuntu/Debian)
+      apt:
+        name: sqlite3
+        state: present
+      become: yes
+      when: ansible_os_family == "Debian"
+
+    # ============ Project Setup ============
+    - name: Create Python virtual environment for server
+      python:
+        virtualenv: "{{ playbook_dir }}/server/venv"
+        virtualenv_command: python3 -m venv
+
+    - name: Install Python dependencies for server
+      pip:
+        requirements: "{{ playbook_dir }}/server/requirements.txt"
+        virtualenv: "{{ playbook_dir }}/server/venv"
+      ignore_errors: yes
+
+    - name: Initialize database
+      shell: |
+        source {{ playbook_dir }}/server/venv/bin/activate
+        cd {{ playbook_dir }}/server
+        python -c "from main import app; from app.database import init_db; init_db()"
+      args:
+        executable: /bin/bash
+      ignore_errors: yes
+
+    # ============ Verification ============
+    - name: Verify Docker installation
+      shell: docker --version
+      register: docker_version
+      changed_when: false
+
+    - name: Verify Python installation
+      shell: python3 --version
+      register: python_version_check
+      changed_when: false
+
+    - name: Verify Node.js installation
+      shell: node --version
+      register: node_version_check
+      changed_when: false
+
+    - name: Verify Git installation
+      shell: git --version
+      register: git_version
+      changed_when: false
+
+    - name: Display installation summary
+      debug:
+        msg: |
+          ==========================================
+          ✓ Development Environment Setup Complete!
+          ==========================================
+
+          {{ docker_version.stdout }}
+          {{ python_version_check.stdout }}
+          {{ node_version_check.stdout }}
+          {{ git_version.stdout }}
+
+          Project Structure:
+          • Server: {{ playbook_dir }}/server
+          • Client: {{ playbook_dir }}/client
+          • Virtual Environment: {{ playbook_dir }}/server/venv
+
+          Next Steps:
+          1. Activate the Python environment:
+             source server/venv/bin/activate
+
+          2. Run the server:
+             python server/main.py
+
+          3. Install client dependencies (if applicable):
+             cd client && npm install
+
+          ==========================================

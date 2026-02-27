@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Text, DateTime, ForeignKey, Table
+from sqlalchemy import Column, Integer, String, Text, DateTime, ForeignKey, Table, UniqueConstraint
 from sqlalchemy.orm import relationship
 from datetime import datetime
 from app.database import Base
@@ -22,6 +22,7 @@ class User(Base):
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     books = relationship("Book", back_populates="owner", cascade="all, delete-orphan")
+    preference = relationship("Preference", back_populates="owner", uselist=False, cascade="all, delete-orphan")
 
 
 class Author(Base):
@@ -57,3 +58,16 @@ class Book(Base):
         secondary=book_author_association,
         back_populates="books"
     )
+
+
+class Preference(Base):
+    __tablename__ = "preferences"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey('users.id', ondelete='CASCADE'), unique=True, nullable=False)
+    theme = Column(String(50), nullable=False, default="dark")
+    font_scale = Column(String(50), nullable=False, default="normal")
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    owner = relationship("User", back_populates="preference")
