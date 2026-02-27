@@ -1,0 +1,46 @@
+@import url("https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap");
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Theme CSS variables ─────────────────────────────────── */
+:root {
+  --color-bg: 15 23 42;        /* #0f172a – dark navy */
+  --color-accent: 14 165 233;  /* #0ea5e9 – sky blue  */
+}
+
+[data-theme="sepia"] {
+  --color-bg: 28 17 10;        /* warm dark brown */
+  --color-accent: 217 119 6;   /* amber-orange    */
+}
+
+[data-theme="ardoise"] {
+  --color-bg: 10 15 26;        /* deep slate */
+  --color-accent: 99 102 241;  /* indigo     */
+}
+
+[data-theme="foret"] {
+  --color-bg: 10 26 15;        /* dark forest green */
+  --color-accent: 16 185 129;  /* emerald           */
+}
+
+/* ── Font scale ──────────────────────────────────────────── */
+[data-font="large"]  { font-size: 18px; }
+[data-font="xlarge"] { font-size: 20px; }
+
+/* ── Base styles ─────────────────────────────────────────── */
+:root {
+  background: rgb(var(--color-bg));
+}
+
+body {
+  font-family: "Space Grotesk", system-ui, -apple-system, sans-serif;
+  margin: 0;
+  min-height: 100vh;
+  background: rgb(var(--color-bg));
+  color: #e5e7eb;
+}
+
+* {
+  scroll-behavior: smooth;
+}
