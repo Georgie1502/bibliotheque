@@ -62,7 +62,7 @@ jobs:
 
       - name: Install client dependencies
         working-directory: ./client
-        run: npm ci
+        run: npm i
 
       - name: Run linting
         working-directory: ./client
