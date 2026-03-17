@@ -2,8 +2,13 @@ from passlib.context import CryptContext
 from datetime import datetime, timedelta
 from typing import Optional
 from jose import JWTError, jwt
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+
+from app.exceptions import InvalidTokenError
+from app.logging_config import get_logger
+
+logger = get_logger(__name__)
 
 # Password hashing configuration
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -45,13 +50,9 @@ def verify_token(credentials: HTTPAuthorizationCredentials = Depends(security)) 
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         email: str = payload.get("sub")
         if email is None:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid token"
-            )
+            logger.warning("Token missing 'sub' claim")
+            raise InvalidTokenError()
         return email
-    except JWTError:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid token"
-        )
+    except JWTError as e:
+        logger.warning(f"Invalid JWT token: {str(e)}")
+        raise InvalidTokenError()

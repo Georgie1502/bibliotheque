@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, status
 from sqlalchemy.orm import Session
 from typing import List
 
@@ -6,7 +6,14 @@ from app.database import get_db
 from app.models import Book, Author, User
 from app.schemas import BookCreate, BookRead, BookUpdate
 from app.security import verify_token
+from app.exceptions import (
+    DuplicateResourceError,
+    ResourceNotFoundError,
+    PermissionError as AppPermissionError
+)
+from app.logging_config import get_logger
 
+logger = get_logger(__name__)
 router = APIRouter(prefix="/api/books", tags=["books"])
 
 
@@ -20,18 +27,16 @@ def create_book(
     # Get current user
     user = db.query(User).filter(User.email == email).first()
     if not user:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found"
-        )
+        raise ResourceNotFoundError("User", email)
     
     # Validate ISBN uniqueness if provided
     if book.isbn:
         existing_book = db.query(Book).filter(Book.isbn == book.isbn).first()
         if existing_book:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Book with this ISBN already exists"
+            logger.warning(f"Attempt to create book with existing ISBN: {book.isbn}")
+            raise DuplicateResourceError(
+                message="Book with this ISBN already exists",
+                details={"isbn": book.isbn}
             )
     
     # Create book
@@ -51,6 +56,7 @@ def create_book(
     db.add(db_book)
     db.commit()
     db.refresh(db_book)
+    logger.info(f"Book created: {db_book.id} by user {email}")
     return db_book
 
 
@@ -64,10 +70,7 @@ def list_books(
     """List all books for the current user"""
     user = db.query(User).filter(User.email == email).first()
     if not user:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found"
-        )
+        raise ResourceNotFoundError("User", email)
     
     books = db.query(Book).filter(
         Book.owner_id == user.id
@@ -84,10 +87,7 @@ def get_book(
     """Get a specific book"""
     user = db.query(User).filter(User.email == email).first()
     if not user:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found"
-        )
+        raise ResourceNotFoundError("User", email)
     
     book = db.query(Book).filter(
         Book.id == book_id,
@@ -95,10 +95,7 @@ def get_book(
     ).first()
     
     if not book:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Book not found"
-        )
+        raise ResourceNotFoundError("Book", book_id)
     return book
 
 
@@ -112,10 +109,7 @@ def update_book(
     """Update a book"""
     user = db.query(User).filter(User.email == email).first()
     if not user:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found"
-        )
+        raise ResourceNotFoundError("User", email)
     
     book = db.query(Book).filter(
         Book.id == book_id,
@@ -123,10 +117,7 @@ def update_book(
     ).first()
     
     if not book:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Book not found"
-        )
+        raise ResourceNotFoundError("Book", book_id)
     
     # Update fields if provided
     if book_update.title is not None:
@@ -140,9 +131,10 @@ def update_book(
             Book.id != book_id
         ).first()
         if existing:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Book with this ISBN already exists"
+            logger.warning(f"Attempt to update book with existing ISBN: {book_update.isbn}")
+            raise DuplicateResourceError(
+                message="Book with this ISBN already exists",
+                details={"isbn": book_update.isbn}
             )
         book.isbn = book_update.isbn
     if book_update.published_year is not None:
@@ -155,6 +147,7 @@ def update_book(
     
     db.commit()
     db.refresh(book)
+    logger.info(f"Book updated: {book_id} by user {email}")
     return book
 
 
@@ -167,10 +160,7 @@ def delete_book(
     """Delete a book"""
     user = db.query(User).filter(User.email == email).first()
     if not user:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found"
-        )
+        raise ResourceNotFoundError("User", email)
     
     book = db.query(Book).filter(
         Book.id == book_id,
@@ -178,10 +168,8 @@ def delete_book(
     ).first()
     
     if not book:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Book not found"
-        )
+        raise ResourceNotFoundError("Book", book_id)
     
     db.delete(book)
     db.commit()
+    logger.info(f"Book deleted: {book_id} by user {email}")

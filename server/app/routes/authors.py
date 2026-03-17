@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, status
 from sqlalchemy.orm import Session
 from typing import List
 
@@ -6,7 +6,10 @@ from app.database import get_db
 from app.models import Author
 from app.schemas import AuthorCreate, AuthorRead, AuthorUpdate
 from app.security import verify_token
+from app.exceptions import DuplicateResourceError, ResourceNotFoundError
+from app.logging_config import get_logger
 
+logger = get_logger(__name__)
 router = APIRouter(prefix="/api/authors", tags=["authors"])
 
 
@@ -20,9 +23,10 @@ def create_author(
     # Check if author with same name already exists
     existing_author = db.query(Author).filter(Author.name == author.name).first()
     if existing_author:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Author already exists"
+        logger.warning(f"Attempt to create author with existing name: {author.name}")
+        raise DuplicateResourceError(
+            message="Author already exists",
+            details={"name": author.name}
         )
     
     db_author = Author(
@@ -32,6 +36,7 @@ def create_author(
     db.add(db_author)
     db.commit()
     db.refresh(db_author)
+    logger.info(f"Author created: {db_author.id} - {author.name}")
     return db_author
 
 
@@ -56,10 +61,7 @@ def get_author(
     """Get a specific author"""
     author = db.query(Author).filter(Author.id == author_id).first()
     if not author:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Author not found"
-        )
+        raise ResourceNotFoundError("Author", author_id)
     return author
 
 
@@ -73,10 +75,7 @@ def update_author(
     """Update an author"""
     author = db.query(Author).filter(Author.id == author_id).first()
     if not author:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Author not found"
-        )
+        raise ResourceNotFoundError("Author", author_id)
     
     if author_update.name is not None:
         author.name = author_update.name
@@ -85,6 +84,7 @@ def update_author(
     
     db.commit()
     db.refresh(author)
+    logger.info(f"Author updated: {author_id}")
     return author
 
 
@@ -97,10 +97,8 @@ def delete_author(
     """Delete an author"""
     author = db.query(Author).filter(Author.id == author_id).first()
     if not author:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Author not found"
-        )
+        raise ResourceNotFoundError("Author", author_id)
     
     db.delete(author)
     db.commit()
+    logger.info(f"Author deleted: {author_id}")

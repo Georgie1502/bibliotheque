@@ -1,11 +1,14 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, status
 from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.models import Preference, User
 from app.schemas import PreferenceRead, PreferenceUpdate
 from app.security import verify_token
+from app.exceptions import ResourceNotFoundError
+from app.logging_config import get_logger
 
+logger = get_logger(__name__)
 router = APIRouter(prefix="/api/preferences", tags=["preferences"])
 
 
@@ -23,7 +26,7 @@ def _get_or_create_preference(user: User, db: Session) -> Preference:
 def _resolve_user(email: str, db: Session) -> User:
     user = db.query(User).filter(User.email == email).first()
     if not user:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+        raise ResourceNotFoundError("User", email)
     return user
 
 

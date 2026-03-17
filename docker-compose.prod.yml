@@ -1,26 +1,70 @@
-version: "3.8"
+version: "3.9"
 
 services:
-  api:
+  # ============ REVERSE PROXY & LOAD BALANCER ============
+  nginx:
+    image: nginx:alpine
+    container_name: bibliotheque-nginx
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./ssl:/etc/nginx/ssl:ro
+      - nginx-cache:/var/cache/nginx
+    depends_on:
+      - api-1
+      - api-2
+      - client
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "wget",
+          "--quiet",
+          "--tries=1",
+          "--spider",
+          "http://localhost/health",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    networks:
+      - bibliotheque-prod
+    environment:
+      - TZ=UTC
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # ============ API INSTANCES (LOAD BALANCED) ============
+  api-1:
     build:
       context: ./server
       dockerfile: Dockerfile
-    container_name: bibliotheque-api-prod
+    container_name: bibliotheque-api-1
+    restart: unless-stopped
     volumes:
-      - bibliotheque-data:/app
-    ports:
-      - "8000:8000"
+      - bibliotheque-data:/app/data
     environment:
       - ENV=production
+      - LOG_LEVEL=INFO
+      - DATABASE_URL=sqlite:///./app/data/bibliotheque.db
+      - PYTHONUNBUFFERED=1
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/"]
-      interval: 30s
+      interval: 15s
       timeout: 10s
       retries: 3
-      start_period: 10s
-    restart: unless-stopped
+      start_period: 20s
     networks:
       - bibliotheque-prod
+    depends_on:
+      - db-backup
     deploy:
       resources:
         limits:
@@ -29,18 +73,82 @@ services:
         reservations:
           cpus: "0.5"
           memory: 256M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
+  api-2:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: bibliotheque-api-2
+    restart: unless-stopped
+    volumes:
+      - bibliotheque-data:/app/data
+    environment:
+      - ENV=production
+      - LOG_LEVEL=INFO
+      - DATABASE_URL=sqlite:///./app/data/bibliotheque.db
+      - PYTHONUNBUFFERED=1
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/"]
+      interval: 15s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+    networks:
+      - bibliotheque-prod
+    depends_on:
+      - db-backup
+    deploy:
+      resources:
+        limits:
+          cpus: "1"
+          memory: 512M
+        reservations:
+          cpus: "0.5"
+          memory: 256M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # ============ DATABASE BACKUP SERVICE ============
+  db-backup:
+    image: alpine:latest
+    container_name: bibliotheque-db-backup
+    restart: unless-stopped
+    volumes:
+      - bibliotheque-data:/data
+      - ./backup:/backup
+    entrypoint: |
+      sh -c 'while true; do
+        echo "$(date): Creating database backup..."
+        cp /data/bibliotheque.db /backup/bibliotheque.db.$(date +%Y%m%d_%H%M%S) || true
+        find /backup -name "bibliotheque.db.*" -mtime +7 -delete || true
+        sleep 3600
+      done'
+    networks:
+      - bibliotheque-prod
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "5m"
+        max-file: "2"
+
+  # ============ CLIENT ============
   client:
     build:
       context: ./client
       dockerfile: Dockerfile
     container_name: bibliotheque-client-prod
-    volumes:
-      - bibliotheque-client-build:/app/build
-    ports:
-      - "3000:3000"
+    restart: unless-stopped
     environment:
-      - REACT_APP_API_URL=http://localhost:8000
+      - REACT_APP_API_URL=/api
+      - NODE_ENV=production
     healthcheck:
       test:
         [
@@ -54,10 +162,7 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 10s
-    restart: unless-stopped
-    depends_on:
-      - api
+      start_period: 20s
     networks:
       - bibliotheque-prod
     deploy:
@@ -68,13 +173,113 @@ services:
         reservations:
           cpus: "0.25"
           memory: 128M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
+  # ============ MONITORING & UPTIME TRACKING ============
+  uptime-kuma:
+    image: louislam/uptime-kuma:latest
+    container_name: bibliotheque-uptime-kuma
+    restart: always
+    volumes:
+      - uptime-kuma-data:/app/data
+    ports:
+      - "3001:3001"
+    environment:
+      - ALLOW_ALL_ORIGINS=true
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "wget",
+          "--quiet",
+          "--tries=1",
+          "--spider",
+          "http://localhost:3001",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    networks:
+      - bibliotheque-prod
+    depends_on:
+      - nginx
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # ============ REDIS CACHE (OPTIONAL - FOR SESSIONS/CACHING) ============
+  redis:
+    image: redis:7-alpine
+    container_name: bibliotheque-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes --appendfsync everysec
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - bibliotheque-prod
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 128M
+        reservations:
+          cpus: "0.25"
+          memory: 64M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "5m"
+        max-file: "2"
+
+# ============ VOLUMES FOR DATA PERSISTENCE ============
 volumes:
   bibliotheque-data:
     driver: local
-  bibliotheque-client-build:
-    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${PWD}/data
 
+  nginx-cache:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${PWD}/nginx-cache
+
+  uptime-kuma-data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${PWD}/uptime-kuma-data
+
+  redis-data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${PWD}/redis-data
+
+# ============ NETWORK CONFIGURATION ============
 networks:
   bibliotheque-prod:
     driver: bridge
+    ipam:
+      config:
+        - subnet: 10.0.9.0/24
+    driver_opts:
+      com.docker.network.bridge.name: br-prod
+      com.docker.network.bridge.enable_icc: "true"
