@@ -8,14 +8,41 @@ import {
   AuthorPayload,
   Preference,
   PreferencePayload,
-  User
+  User,
 } from "../types";
+import { ApiError, parseAxiosError } from "./errors";
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000";
+export {
+  ApiError,
+  NetworkError,
+  AuthError,
+  ForbiddenError,
+  NotFoundError,
+  ConflictError,
+  ValidationError,
+  ServerError,
+} from "./errors";
+
+const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL || "http://localhost:8000";
 
 const api = axios.create({
-  baseURL: API_BASE_URL
+  baseURL: API_BASE_URL,
 });
+
+// Intercepteur global : toutes les erreurs HTTP sont converties en ApiError typées.
+// Les stack traces brutes d'axios ne remontent jamais jusqu'aux composants.
+api.interceptors.response.use(
+  (response) => response,
+  (error: unknown) => {
+    if (axios.isAxiosError(error)) {
+      return Promise.reject(parseAxiosError(error));
+    }
+    return Promise.reject(
+      new ApiError("Erreur inattendue", "UNKNOWN_ERROR", 0),
+    );
+  },
+);
 
 export const setAuthToken = (token: string | null) => {
   if (token) {
@@ -25,13 +52,25 @@ export const setAuthToken = (token: string | null) => {
   }
 };
 
-export const register = async (email: string, password: string): Promise<User> => {
-  const { data } = await api.post<User>("/api/users/register", { email, password });
+export const register = async (
+  email: string,
+  password: string,
+): Promise<User> => {
+  const { data } = await api.post<User>("/api/users/register", {
+    email,
+    password,
+  });
   return data;
 };
 
-export const login = async (email: string, password: string): Promise<AuthResponse> => {
-  const { data } = await api.post<AuthResponse>("/api/users/login", { email, password });
+export const login = async (
+  email: string,
+  password: string,
+): Promise<AuthResponse> => {
+  const { data } = await api.post<AuthResponse>("/api/users/login", {
+    email,
+    password,
+  });
   return data;
 };
 
@@ -62,7 +101,7 @@ export const createBook = async (payload: BookPayload): Promise<Book> => {
 
 export const updateBook = async (
   id: number,
-  payload: BookUpdatePayload
+  payload: BookUpdatePayload,
 ): Promise<Book> => {
   const { data } = await api.put<Book>(`/api/books/${id}`, payload);
   return data;
@@ -77,7 +116,9 @@ export const fetchPreferences = async (): Promise<Preference> => {
   return data;
 };
 
-export const upsertPreferences = async (payload: PreferencePayload): Promise<Preference> => {
+export const upsertPreferences = async (
+  payload: PreferencePayload,
+): Promise<Preference> => {
   const { data } = await api.put<Preference>("/api/preferences/me", payload);
   return data;
 };
