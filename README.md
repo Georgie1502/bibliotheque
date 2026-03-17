@@ -144,7 +144,9 @@ A `[SECURITY.md](./SECURITY.md)` file is included to provide guidelines on how t
 
 A CI/CD pipeline is set up using GitHub Actions to automate the testing and deployment process. The configuration for the pipeline can be found in the `.github/workflows` directory. This pipeline will run tests on every pull request and automatically deploy to production when changes are merged into the `main` branch. Like this, no need to worry about manual deployments or missing tests.
 
-- Server autobuild and test: `.github/workflows/docker-publish-server.yml`
+- Full CI/CD documentation: `[docs/CI_CD.md](./docs/CI_CD.md)`
+- Server autobuild and image publication: `.github/workflows/docker-publish-server.yml`
+- Auto branch creation from issues: `.github/workflows/issue-to-branch.yml`
 - AutoDocs generation: `.github/workflows/wiki-sync.yml`
 
 ## License
