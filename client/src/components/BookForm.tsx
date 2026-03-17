@@ -11,7 +11,7 @@ const emptyPayload: BookPayload = {
   description: "",
   isbn: "",
   published_year: undefined,
-  author_ids: []
+  author_ids: [],
 };
 
 const BookForm = ({ authors, onCreate }: BookFormProps) => {
@@ -43,7 +43,10 @@ const BookForm = ({ authors, onCreate }: BookFormProps) => {
       await onCreate({
         ...form,
         published_year: form.published_year || undefined,
-        author_ids: form.author_ids && form.author_ids.length ? form.author_ids : undefined
+        author_ids:
+          form.author_ids && form.author_ids.length
+            ? form.author_ids
+            : undefined,
       });
       setForm(emptyPayload);
     } catch (err: unknown) {
@@ -82,7 +85,12 @@ const BookForm = ({ authors, onCreate }: BookFormProps) => {
             Année
             <input
               value={form.published_year || ""}
-              onChange={(e) => setForm({ ...form, published_year: Number(e.target.value) || undefined })}
+              onChange={(e) =>
+                setForm({
+                  ...form,
+                  published_year: Number(e.target.value) || undefined,
+                })
+              }
               type="number"
               className="mt-1 w-full rounded-lg bg-white/10 border border-white/10 px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-teal"
             />
@@ -117,7 +125,11 @@ const BookForm = ({ authors, onCreate }: BookFormProps) => {
                 </button>
               );
             })}
-            {authors.length === 0 && <span className="text-sand/60">Aucun auteur (vous pouvez en créer via l&apos;API)</span>}
+            {authors.length === 0 && (
+              <span className="text-sand/60">
+                Aucun auteur (vous pouvez en créer via l&apos;API)
+              </span>
+            )}
           </div>
         </div>
         {error && <p className="text-amber text-sm">{error}</p>}

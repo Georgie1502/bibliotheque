@@ -23,7 +23,7 @@ const AuthorForm = ({ onCreate }: AuthorFormProps) => {
     try {
       await onCreate({
         name: form.name.trim(),
-        biography: form.biography?.trim() || undefined
+        biography: form.biography?.trim() || undefined,
       });
       setForm(emptyAuthor);
     } catch (err: unknown) {

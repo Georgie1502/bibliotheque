@@ -20,7 +20,7 @@ const BookDetail = ({ book, authors, onUpdate, onDelete }: BookDetailProps) => {
         description: book.description || "",
         isbn: book.isbn || "",
         published_year: book.published_year || undefined,
-        author_ids: book.authors?.map((a) => a.id) || []
+        author_ids: book.authors?.map((a) => a.id) || [],
       });
     }
   }, [book]);
@@ -46,7 +46,7 @@ const BookDetail = ({ book, authors, onUpdate, onDelete }: BookDetailProps) => {
       await onUpdate(book.id, {
         ...form,
         published_year: form.published_year || undefined,
-        author_ids: form.author_ids
+        author_ids: form.author_ids,
       });
     } catch (err: unknown) {
       setError("Échec de la mise à jour.");
@@ -55,7 +55,10 @@ const BookDetail = ({ book, authors, onUpdate, onDelete }: BookDetailProps) => {
     }
   };
 
-  const authorsById = useMemo(() => new Map(authors.map((a) => [a.id, a])), [authors]);
+  const authorsById = useMemo(
+    () => new Map(authors.map((a) => [a.id, a])),
+    [authors],
+  );
 
   if (!book) {
     return (
@@ -70,7 +73,9 @@ const BookDetail = ({ book, authors, onUpdate, onDelete }: BookDetailProps) => {
       <div className="flex items-start justify-between gap-4">
         <div>
           <h2 className="text-2xl font-semibold text-white">{book.title}</h2>
-          <p className="text-sand/70 text-sm">Dernière mise à jour: {new Date(book.updated_at).toLocaleString()}</p>
+          <p className="text-sand/70 text-sm">
+            Dernière mise à jour: {new Date(book.updated_at).toLocaleString()}
+          </p>
         </div>
         <button
           onClick={() => onDelete(book.id)}
@@ -103,7 +108,12 @@ const BookDetail = ({ book, authors, onUpdate, onDelete }: BookDetailProps) => {
             Année
             <input
               value={form.published_year || ""}
-              onChange={(e) => setForm({ ...form, published_year: Number(e.target.value) || undefined })}
+              onChange={(e) =>
+                setForm({
+                  ...form,
+                  published_year: Number(e.target.value) || undefined,
+                })
+              }
               type="number"
               className="mt-1 w-full rounded-lg bg-white/10 border border-white/10 px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-teal"
             />
@@ -141,11 +151,17 @@ const BookDetail = ({ book, authors, onUpdate, onDelete }: BookDetailProps) => {
                 </button>
               );
             })}
-            {authors.length === 0 && <span className="text-sand/60">Aucun auteur disponible.</span>}
+            {authors.length === 0 && (
+              <span className="text-sand/60">Aucun auteur disponible.</span>
+            )}
           </div>
           {form.author_ids && form.author_ids.length > 0 && (
             <p className="text-xs text-sand/60 mt-1">
-              Sélection: {form.author_ids.map((id) => authorsById.get(id)?.name).filter(Boolean).join(", ")}
+              Sélection:{" "}
+              {form.author_ids
+                .map((id) => authorsById.get(id)?.name)
+                .filter(Boolean)
+                .join(", ")}
             </p>
           )}
         </div>
@@ -160,7 +176,9 @@ const BookDetail = ({ book, authors, onUpdate, onDelete }: BookDetailProps) => {
           >
             {saving ? "Sauvegarde..." : "Enregistrer"}
           </button>
-          <span className="text-xs text-sand/60">Les modifications sont envoyées directement à l&apos;API.</span>
+          <span className="text-xs text-sand/60">
+            Les modifications sont envoyées directement à l&apos;API.
+          </span>
         </div>
       </form>
     </div>
