@@ -117,7 +117,7 @@ const BookForm = ({ authors, onCreate }: BookFormProps) => {
                 </button>
               );
             })}
-            {authors.length === 0 && <span className="text-sand/60">Aucun auteur (vous pouvez en créer via l'API)</span>}
+            {authors.length === 0 && <span className="text-sand/60">Aucun auteur (vous pouvez en créer via l&apos;API)</span>}
           </div>
         </div>
         {error && <p className="text-amber text-sm">{error}</p>}

@@ -160,7 +160,7 @@ const BookDetail = ({ book, authors, onUpdate, onDelete }: BookDetailProps) => {
           >
             {saving ? "Sauvegarde..." : "Enregistrer"}
           </button>
-          <span className="text-xs text-sand/60">Les modifications sont envoyées directement à l'API.</span>
+          <span className="text-xs text-sand/60">Les modifications sont envoyées directement à l&apos;API.</span>
         </div>
       </form>
     </div>

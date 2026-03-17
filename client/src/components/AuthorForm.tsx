@@ -64,7 +64,7 @@ const AuthorForm = ({ onCreate }: AuthorFormProps) => {
           disabled={loading}
           className="w-full bg-white text-ink font-semibold py-2 rounded-lg shadow-soft hover:-translate-y-[1px] transition-transform disabled:opacity-70"
         >
-          Ajouter l'auteur
+          Ajouter l&apos;auteur
         </button>
       </form>
     </div>
