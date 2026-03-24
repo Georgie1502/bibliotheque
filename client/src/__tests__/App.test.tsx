@@ -13,7 +13,7 @@ const mocks = vi.hoisted(() => {
     deleteBookMock: vi.fn(),
     createAuthorMock: vi.fn(),
     updateBookMock: vi.fn(),
-    setAuthTokenMock: vi.fn()
+    setAuthTokenMock: vi.fn(),
   };
 });
 
@@ -26,18 +26,18 @@ vi.mock("../api/client", () => ({
   deleteBook: mocks.deleteBookMock,
   createAuthor: mocks.createAuthorMock,
   updateBook: mocks.updateBookMock,
-  setAuthToken: mocks.setAuthTokenMock
+  setAuthToken: mocks.setAuthTokenMock,
 }));
 
 const user: User = {
   id: 99,
   email: "demo@bibliotheque.test",
   created_at: "",
-  updated_at: ""
+  updated_at: "",
 };
 
 const authors: Author[] = [
-  { id: 1, name: "Frank Herbert", biography: "", created_at: "" }
+  { id: 1, name: "Frank Herbert", biography: "", created_at: "" },
 ];
 
 const books: Book[] = [
@@ -50,8 +50,8 @@ const books: Book[] = [
     owner_id: 99,
     created_at: "",
     updated_at: new Date().toISOString(),
-    authors
-  }
+    authors,
+  },
 ];
 
 describe("App", () => {
@@ -80,8 +80,12 @@ describe("App", () => {
 
     renderApp();
 
-    await waitFor(() => expect(screen.getByText(/Bonjour/)).toBeInTheDocument());
-    expect(screen.getByText("Bonjour demo@bibliotheque.test")).toBeInTheDocument();
+    await waitFor(() =>
+      expect(screen.getByText(/Bonjour/)).toBeInTheDocument(),
+    );
+    expect(
+      screen.getByText("Bonjour demo@bibliotheque.test"),
+    ).toBeInTheDocument();
     expect(screen.getAllByText("Dune")[0]).toBeInTheDocument();
     expect(mocks.setAuthTokenMock).toHaveBeenCalledWith("token-123");
     expect(mocks.fetchBooksMock).toHaveBeenCalledTimes(1);
