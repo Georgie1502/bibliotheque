@@ -1,6 +1,7 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import App from "../App";
+import { ToastProvider } from "../context/ToastContext";
 import { Author, Book, User } from "../types";
 
 const mocks = vi.hoisted(() => {
@@ -54,13 +55,20 @@ const books: Book[] = [
 ];
 
 describe("App", () => {
+  const renderApp = () =>
+    render(
+      <ToastProvider>
+        <App />
+      </ToastProvider>,
+    );
+
   beforeEach(() => {
     vi.clearAllMocks();
     localStorage.clear();
   });
 
   it("shows the authentication form when no token is present", () => {
-    render(<App />);
+    renderApp();
     expect(screen.getByText(/Connexion/)).toBeInTheDocument();
   });
 
@@ -70,7 +78,7 @@ describe("App", () => {
     mocks.fetchAuthorsMock.mockResolvedValue(authors);
     mocks.fetchBooksMock.mockResolvedValue(books);
 
-    render(<App />);
+    renderApp();
 
     await waitFor(() => expect(screen.getByText(/Bonjour/)).toBeInTheDocument());
     expect(screen.getByText("Bonjour demo@bibliotheque.test")).toBeInTheDocument();
