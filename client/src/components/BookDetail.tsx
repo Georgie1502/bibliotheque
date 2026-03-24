@@ -1,5 +1,6 @@
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { Author, Book, BookUpdatePayload } from "../types";
+import { useToast } from "../hooks/useToast";
 
 type BookDetailProps = {
   book: Book | null;
@@ -9,9 +10,9 @@ type BookDetailProps = {
 };
 
 const BookDetail = ({ book, authors, onUpdate, onDelete }: BookDetailProps) => {
+  const toast = useToast();
   const [form, setForm] = useState<BookUpdatePayload>({});
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (book) {
@@ -41,7 +42,6 @@ const BookDetail = ({ book, authors, onUpdate, onDelete }: BookDetailProps) => {
     e.preventDefault();
     if (!book) return;
     setSaving(true);
-    setError(null);
     try {
       await onUpdate(book.id, {
         ...form,
@@ -49,7 +49,7 @@ const BookDetail = ({ book, authors, onUpdate, onDelete }: BookDetailProps) => {
         author_ids: form.author_ids,
       });
     } catch (err: unknown) {
-      setError("Échec de la mise à jour.");
+      // Error is already handled by parent component
     } finally {
       setSaving(false);
     }
@@ -165,8 +165,6 @@ const BookDetail = ({ book, authors, onUpdate, onDelete }: BookDetailProps) => {
             </p>
           )}
         </div>
-
-        {error && <p className="text-amber text-sm">{error}</p>}
 
         <div className="flex items-center gap-3">
           <button

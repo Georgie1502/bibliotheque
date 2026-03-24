@@ -20,6 +20,7 @@ class User(Base):
     hashed_password = Column(String(255), nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    demo = Column(Integer, default=0)  # Field to track demo interactions
 
     books = relationship("Book", back_populates="owner", cascade="all, delete-orphan")
     preference = relationship("Preference", back_populates="owner", uselist=False, cascade="all, delete-orphan")

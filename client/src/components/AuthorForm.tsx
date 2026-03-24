@@ -1,5 +1,6 @@
 import { FormEvent, useState } from "react";
 import { AuthorPayload } from "../types";
+import { useToast } from "../hooks/useToast";
 
 type AuthorFormProps = {
   onCreate: (payload: AuthorPayload) => Promise<void>;
@@ -8,15 +9,14 @@ type AuthorFormProps = {
 const emptyAuthor: AuthorPayload = { name: "", biography: "" };
 
 const AuthorForm = ({ onCreate }: AuthorFormProps) => {
+  const toast = useToast();
   const [form, setForm] = useState<AuthorPayload>(emptyAuthor);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   const submit = async (e: FormEvent) => {
     e.preventDefault();
-    setError(null);
     if (!form.name.trim()) {
-      setError("Le nom est obligatoire.");
+      toast.addToast("Le nom est obligatoire.", "warning", 3000);
       return;
     }
     setLoading(true);
@@ -27,7 +27,7 @@ const AuthorForm = ({ onCreate }: AuthorFormProps) => {
       });
       setForm(emptyAuthor);
     } catch (err: unknown) {
-      setError("Création impossible (nom déjà utilisé ?).");
+      // Error is already handled by parent component
     } finally {
       setLoading(false);
     }
@@ -58,7 +58,6 @@ const AuthorForm = ({ onCreate }: AuthorFormProps) => {
             className="mt-1 w-full rounded-lg bg-white/10 border border-white/10 px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-teal"
           />
         </label>
-        {error && <p className="text-amber text-sm">{error}</p>}
         <button
           type="submit"
           disabled={loading}

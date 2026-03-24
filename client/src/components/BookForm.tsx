@@ -1,5 +1,6 @@
 import { FormEvent, useState } from "react";
 import { Author, BookPayload } from "../types";
+import { useToast } from "../hooks/useToast";
 
 type BookFormProps = {
   authors: Author[];
@@ -15,9 +16,9 @@ const emptyPayload: BookPayload = {
 };
 
 const BookForm = ({ authors, onCreate }: BookFormProps) => {
+  const toast = useToast();
   const [form, setForm] = useState<BookPayload>(emptyPayload);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   const toggleAuthor = (id: number) => {
     setForm((prev) => {
@@ -33,9 +34,8 @@ const BookForm = ({ authors, onCreate }: BookFormProps) => {
 
   const submit = async (e: FormEvent) => {
     e.preventDefault();
-    setError(null);
     if (!form.title.trim()) {
-      setError("Le titre est obligatoire.");
+      toast.addToast("Le titre est obligatoire.", "warning", 3000);
       return;
     }
     setLoading(true);
@@ -50,7 +50,7 @@ const BookForm = ({ authors, onCreate }: BookFormProps) => {
       });
       setForm(emptyPayload);
     } catch (err: unknown) {
-      setError("Création impossible. Vérifie l'ISBN ou l'état du serveur.");
+      // Error is already handled by parent component
     } finally {
       setLoading(false);
     }
@@ -132,7 +132,6 @@ const BookForm = ({ authors, onCreate }: BookFormProps) => {
             )}
           </div>
         </div>
-        {error && <p className="text-amber text-sm">{error}</p>}
         <button
           type="submit"
           disabled={loading}

@@ -20,6 +20,8 @@ import PreferencesPanel from "./components/PreferencesPanel";
 import { usePreferences } from "./hooks/usePreferences";
 import { Confetti } from "./components/Confetti";
 import { useKonamiCode } from "./hooks/useKonamiCode";
+import { useToast } from "./hooks/useToast";
+import { handleApiError } from "./utils/errorHandler";
 import {
   Author,
   Book,
@@ -33,6 +35,7 @@ const STORAGE_KEY = "bibliotheque_token";
 
 const App = () => {
   const { prefs, update: _updatePrefs, load: loadPrefs } = usePreferences();
+  const toast = useToast();
   const [token, setToken] = useState<string | null>(() =>
     localStorage.getItem(STORAGE_KEY),
   );
@@ -42,7 +45,6 @@ const App = () => {
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [filter, setFilter] = useState("");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [konamiTriggerCount, setKonamiTriggerCount] = useState(0);
 
   // Konami code easter egg
@@ -60,7 +62,6 @@ const App = () => {
       setBooks([]);
       setAuthors([]);
       setSelectedId(null);
-      setError(null);
       setAuthToken(null);
     }
   }, [token]);
@@ -68,7 +69,6 @@ const App = () => {
   const bootstrap = async () => {
     if (!token) return;
     setLoading(true);
-    setError(null);
     try {
       const [me, fetchedAuthors, fetchedBooks] = await Promise.all([
         fetchCurrentUser(),
@@ -92,7 +92,9 @@ const App = () => {
         // Keep localStorage prefs if the API call fails
       }
     } catch (err: unknown) {
-      setError(
+      handleApiError(
+        err,
+        toast,
         "Impossible de récupérer les données. Vérifie le token ou que l'API tourne (localhost:8000).",
       );
     } finally {
@@ -121,35 +123,56 @@ const App = () => {
   };
 
   const handleLogout = () => {
+    toast.addToast("À bientôt!", "info", 2000);
     setToken(null);
     localStorage.removeItem(STORAGE_KEY);
     setAuthToken(null);
   };
 
   const handleCreate = async (payload: BookPayload) => {
-    await createBook(payload);
-    const refreshed = await fetchBooks();
-    setBooks(refreshed);
-    setSelectedId(refreshed[0]?.id ?? null);
+    try {
+      await createBook(payload);
+      const refreshed = await fetchBooks();
+      setBooks(refreshed);
+      setSelectedId(refreshed[0]?.id ?? null);
+      toast.addToast("Livre ajouté avec succès", "success", 3000);
+    } catch (err: unknown) {
+      handleApiError(err, toast, "Impossible d'ajouter le livre");
+    }
   };
 
   const handleAuthorCreate = async (payload: AuthorPayload) => {
-    await createAuthor(payload);
-    const refreshedAuthors = await fetchAuthors();
-    setAuthors(refreshedAuthors);
+    try {
+      await createAuthor(payload);
+      const refreshedAuthors = await fetchAuthors();
+      setAuthors(refreshedAuthors);
+      toast.addToast("Auteur ajouté avec succès", "success", 3000);
+    } catch (err: unknown) {
+      handleApiError(err, toast, "Impossible d'ajouter l'auteur");
+    }
   };
 
   const handleUpdate = async (id: number, payload: BookUpdatePayload) => {
-    await updateBook(id, payload);
-    const refreshed = await fetchBooks();
-    setBooks(refreshed);
+    try {
+      await updateBook(id, payload);
+      const refreshed = await fetchBooks();
+      setBooks(refreshed);
+      toast.addToast("Livre mis à jour avec succès", "success", 3000);
+    } catch (err: unknown) {
+      handleApiError(err, toast, "Impossible de mettre à jour le livre");
+    }
   };
 
   const handleDelete = async (id: number) => {
-    await deleteBook(id);
-    const refreshed = await fetchBooks();
-    setBooks(refreshed);
-    setSelectedId(refreshed[0]?.id ?? null);
+    try {
+      await deleteBook(id);
+      const refreshed = await fetchBooks();
+      setBooks(refreshed);
+      setSelectedId(refreshed[0]?.id ?? null);
+      toast.addToast("Livre supprimé avec succès", "success", 3000);
+    } catch (err: unknown) {
+      handleApiError(err, toast, "Impossible de supprimer le livre");
+    }
   };
 
   const selectedBook = useMemo(
@@ -184,6 +207,12 @@ const App = () => {
             >
               Rafraîchir
             </button>
+            <a
+              href="/demo"
+              className="text-sm px-3 py-1 rounded-lg border border-teal/40 text-teal hover:bg-teal/10"
+            >
+              Demos
+            </a>
             <button
               onClick={handleLogout}
               className="text-sm px-3 py-1 rounded-lg border border-amber/40 text-amber hover:bg-amber/10"
@@ -192,12 +221,6 @@ const App = () => {
             </button>
           </div>
         </header>
-
-        {error && (
-          <div className="bg-amber/10 border border-amber/30 text-amber px-4 py-2 rounded-lg">
-            {error}
-          </div>
-        )}
 
         <div className="space-y-4 sm:space-y-5">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
