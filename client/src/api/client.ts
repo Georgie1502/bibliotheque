@@ -24,7 +24,7 @@ export {
 } from "./errors";
 
 const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL || "https://coofb.homeserver-ericp.fr";
+  import.meta.env.VITE_API_BASE_URL || "https://api.coofb.homeserver-ericp.fr";
 
 const api = axios.create({
   baseURL: API_BASE_URL,
