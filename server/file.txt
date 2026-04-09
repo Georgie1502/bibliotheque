@@ -1,1 +1,5 @@
+<<<<<<< feat/ONLIB-9999
 line 1 modified in feature
+=======
+line 1 modified in main
+>>>>>>> main
